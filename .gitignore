@@ -1,0 +1,20 @@
+
+# Go build artifacts
+/bin/
+/*.exe
+/*.test
+*.out
+
+# Dependency directories (optional, for vendoring)
+vendor/
+
+# IDE/editor metadata
+.vscode/
+.idea/
+*.swp
+
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
