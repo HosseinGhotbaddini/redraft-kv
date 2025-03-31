@@ -19,14 +19,13 @@ func main() {
 	kvStore := store.New()
 
 	// Initialize Raft
-	fsm := &raft.FSMImpl{Store: kvStore}
-	raftNode, err := raft.NewRaftNode(nodeID, fsm)
+	raftNode, err := raft.NewRaftNode(nodeID, kvStore)
 	if err != nil {
 		log.Fatalf("Failed to start Raft node: %v", err)
 	}
 
 	// Start Redis server
-	if err := server.Start(nodeID, raftNode, kvStore); err != nil {
+	if err := server.Start(nodeID, *raftNode, kvStore); err != nil {
 		log.Fatalf("Redis server error: %v", err)
 	}
 }
