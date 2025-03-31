@@ -1,4 +1,7 @@
 
+# Raft data (runtime-generated)
+data/
+
 # Go build artifacts
 /bin/
 /*.exe
