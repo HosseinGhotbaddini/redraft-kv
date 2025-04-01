@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
 	github.com/hashicorp/raft v1.1.0 // indirect
 	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
