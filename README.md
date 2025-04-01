@@ -1,39 +1,99 @@
 # Redraft
 
-**Redraft** is a minimal, Redis-compatible distributed key-value store written in Go. It uses `redcon` for Redis protocol handling and `hashicorp/raft` for replicated state via Raft consensus.
-
-This project is structured to demonstrate clear modular architecture, deterministic state transitions, and consensus correctness in a simplified cluster setting.
+**Redraft** is a distributed key-value store that uses the Redis wire protocol for client interaction and Raft consensus for replication. It is implemented in Go and designed with modular clarity in mind.
 
 ---
 
-## Project Status
+## Features
 
-Implementation in progress.
-
-This README will be updated post-implementation with:
-- Run and usage instructions
-- Test details
-- Final feature list
+- Redis-compatible interface via [`redcon`](https://github.com/tidwall/redcon)
+- Raft-based state replication using [`hashicorp/raft`](https://github.com/hashicorp/raft)
+- Configurable via YAML (no CLI flag jungle)
+- Modular architecture: Server / Raft / Store
+- Deterministic state transitions through FSM
+- In-memory key-value store
 
 ---
 
 ## Architecture
 
-Redraft is organized into three core modules:
+Redraft is composed of three core modules:
 
-- `server/` — Redis protocol server and command router
-- `raft/` — Raft node management and FSM
-- `store/` — In-memory key-value store
+- **server/** — Redis protocol server and command routing
+- **raft/** — Raft node lifecycle and FSM integration
+- **store/** — Thread-safe in-memory key-value state
 
-For detailed architecture, design decisions, and rationale, see [docs/DESIGN.md](docs/DESIGN.md).
+For a full system overview, see [docs/DESIGN.md](docs/DESIGN.md).
 
 ---
 
-## Planned Features
+## Getting Started
 
-- `SET`, `GET`, `DELETE` support via Redis client
-- Raft-based replication across a 3-node cluster
-- Leader-only write path
-- In-memory state storage
-- Minimal test coverage
+### 1. Install Dependencies
 
+```bash
+go mod tidy
+```
+
+---
+
+### 2. Prepare Config Files
+
+Create one config file per node under `config/`:
+
+```yaml
+# config/node1.yaml
+id: node1
+raft_addr: 127.0.0.1:7001
+redis_addr: 127.0.0.1:9001
+peers:
+  node2: 127.0.0.1:7002
+  node3: 127.0.0.1:7003
+```
+
+Duplicate this for node2.yaml, node3.yaml with appropriate IDs and ports.
+
+---
+
+### 3. Run Nodes
+
+In three separate terminals:
+
+```bash
+go run main.go config/node1.yaml
+go run main.go config/node2.yaml
+go run main.go config/node3.yaml
+```
+
+---
+
+### 4. Interact via redis-cli
+
+```bash
+redis-cli -p 9001
+```
+
+Then test it:
+
+```bash
+SET foo bar
+GET foo
+DEL foo
+```
+
+Only the leader node will accept write commands. Use GET on any node.
+
+---
+
+## Development Notes
+
+- All node runtime state is written to `data/<nodeID>/` (ignored in Git)
+- Each node is bootstrapped using a static cluster config
+- Snapshotting is not yet implemented (stub provided)
+- Cluster membership is static (no dynamic join)
+
+---
+
+## Next Steps
+
+- Add integration tests
