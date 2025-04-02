@@ -8,10 +8,14 @@
 
 - Redis-compatible interface via [`redcon`](https://github.com/tidwall/redcon)
 - Raft-based state replication using [`hashicorp/raft`](https://github.com/hashicorp/raft)
-- Configurable via YAML (no CLI flag jungle)
-- Modular architecture: Server / Raft / Store
-- Deterministic state transitions through FSM
+- Modular architecture
+- Static 3-node cluster bootstrapped
+- Deterministic FSM with basic operations
 - In-memory key-value store
+- Configurable via YAML
+- Unit test scaffolding and automated test target
+- Developer Makefile for build/run/test
+
 
 ---
 
@@ -57,12 +61,24 @@ Duplicate this for node2.yaml, node3.yaml with appropriate IDs and ports.
 
 ### 3. Run Nodes
 
-In three separate terminals:
+Using the Makefile:
 
 ```bash
-go run main.go config/node1.yaml
-go run main.go config/node2.yaml
-go run main.go config/node3.yaml
+make node1
+make node2
+make node3
+```
+
+Or to start all three in a tmux session:
+
+```bash
+make cluster
+```
+
+You can also run manually with:
+
+```bash
+make run CONFIG=config/custom.yaml
 ```
 
 ---
@@ -72,6 +88,8 @@ go run main.go config/node3.yaml
 ```bash
 redis-cli -p 9001
 ```
+
+Or use ports 9002, 9003 to interact with other nodes.
 
 Then test it:
 
@@ -85,15 +103,26 @@ Only the leader node will accept write commands. Use GET on any node.
 
 ---
 
-## Development Notes
+## Run Tests
 
-- All node runtime state is written to `data/<nodeID>/` (ignored in Git)
-- Each node is bootstrapped using a static cluster config
-- Snapshotting is not yet implemented (stub provided)
-- Cluster membership is static (no dynamic join)
+```bash
+make test
+```
+
+This runs all unit tests in test/.
 
 ---
 
-## Next Steps
+## Clean Build Artifacts
 
-- Add integration tests
+```bash
+make clean
+```
+
+Removes the binary and local data/ directories used by Raft.
+
+---
+
+## Notes
+
+For future improvements, see [docs/ROADMAP.md](docs/ROADMAP.md).

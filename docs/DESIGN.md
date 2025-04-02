@@ -40,6 +40,8 @@ Redraft is composed of three primary modules:
 - Applies committed log entries through a deterministic FSM
 - Ensures consistency of state across all cluster members
 
+> See initial [Raft library evaluation](https://github.com/your-repo/issues/1) for comparison and rationale behind selecting `hashicorp/raft`.
+
 ### 3. Store (State Backend)
 
 **Responsibilities:**
@@ -109,7 +111,7 @@ The architecture is intentionally modular and can support the following enhancem
 | Raft snapshot and restore            | Raft Engine       |
 | Cluster introspection commands       | Server            |
 | Multi-key commands                   | Server + FSM      |
-| TTLs, pub/sub, metadata support      | Store + FSM       |
+| TTLs, metadata support               | Store + FSM       |
 | Dynamic cluster membership           | Raft Engine       |
 | gRPC or HTTP API layer               | New module        |
 | Blockchain or DAG backend integration| FSM or Store      |
