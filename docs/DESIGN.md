@@ -40,7 +40,7 @@ Redraft is composed of three primary modules:
 - Applies committed log entries through a deterministic FSM
 - Ensures consistency of state across all cluster members
 
-> See initial [Raft library evaluation](https://github.com/your-repo/issues/1) for comparison and rationale behind selecting `hashicorp/raft`.
+> See initial [Raft library evaluation](https://github.com/HosseinGhotbaddini/redraft-kv/issues/1) for comparison and rationale behind selecting `hashicorp/raft`.
 
 ### 3. Store (State Backend)
 
