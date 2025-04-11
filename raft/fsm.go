@@ -11,7 +11,7 @@ import (
 // FSMImpl implements hashicorp/raft.FSM.
 // It defines how replicated log entries are applied to the key-value store.
 type FSMImpl struct {
-	Store *store.Store
+	Store store.Store
 }
 
 // Apply is called once a log entry is committed by the Raft cluster.

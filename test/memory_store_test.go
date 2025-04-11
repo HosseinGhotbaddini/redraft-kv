@@ -7,12 +7,15 @@ import (
 )
 
 func TestStore_SetGet(t *testing.T) {
-	kv := store.New()
+	kv := store.NewMemoryStore()
 
 	t.Run("set and get basic key", func(t *testing.T) {
 		kv.Set("foo", []byte("bar"))
-		val, ok := kv.Get("foo")
-		if !ok {
+		val, err := kv.Get("foo")
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+		if val == nil {
 			t.Fatal("expected key 'foo' to exist")
 		}
 		if string(val) != "bar" {
@@ -29,32 +32,29 @@ func TestStore_SetGet(t *testing.T) {
 	})
 
 	t.Run("get non-existent key", func(t *testing.T) {
-		_, ok := kv.Get("unknown")
-		if ok {
+		val, _ := kv.Get("unknown")
+		if val != nil {
 			t.Error("expected key 'unknown' to not exist")
 		}
 	})
 
 	t.Run("set and get empty key and value", func(t *testing.T) {
 		kv.Set("", []byte{})
-		val, ok := kv.Get("")
-		if !ok {
-			t.Fatal("expected empty key to exist")
-		}
-		if len(val) != 0 {
+		val, _ := kv.Get("")
+		if val == nil || len(val) != 0 {
 			t.Errorf("expected empty value, got %v", val)
 		}
 	})
 }
 
 func TestStore_Delete(t *testing.T) {
-	kv := store.New()
+	kv := store.NewMemoryStore()
 
 	t.Run("delete existing key", func(t *testing.T) {
 		kv.Set("delete-me", []byte("temp"))
 		kv.Delete("delete-me")
-		_, ok := kv.Get("delete-me")
-		if ok {
+		val, _ := kv.Get("delete-me")
+		if val != nil {
 			t.Error("expected key 'delete-me' to be deleted")
 		}
 	})

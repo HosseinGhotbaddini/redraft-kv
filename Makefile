@@ -31,13 +31,14 @@ cluster: build
 	@tmux select-layout even-horizontal
 	@tmux attach-session -t redraft
 
-# Run all tests
+# Run all tests (including memory and bolt)
 test:
 	go test -v ./test/...
 
-# Clean up build artifacts
+# Clean up build artifacts and raft data
 clean:
 	rm -f $(BINARY)
 	rm -rf data/
+	rm -rf testdata/
 
 .PHONY: build run node1 node2 node3 cluster test clean

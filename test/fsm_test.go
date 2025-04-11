@@ -12,13 +12,11 @@ import (
 // helper: marshal store.Command into a mock raft.Log entry
 func makeLog(cmd store.Command) *hraft.Log {
 	data, _ := json.Marshal(cmd)
-	return &hraft.Log{
-		Data: data,
-	}
+	return &hraft.Log{Data: data}
 }
 
 func TestFSM_Apply_SetAndGet(t *testing.T) {
-	kv := store.New()
+	kv := store.NewMemoryStore()
 	fsm := &raft.FSMImpl{Store: kv}
 
 	cmd := store.Command{
@@ -34,14 +32,14 @@ func TestFSM_Apply_SetAndGet(t *testing.T) {
 	}
 
 	// Verify store state
-	val, ok := kv.Get("foo")
-	if !ok || string(val) != "bar" {
+	val, err := kv.Get("foo")
+	if err != nil || val == nil || string(val) != "bar" {
 		t.Errorf("expected 'bar', got '%s'", val)
 	}
 }
 
 func TestFSM_Apply_Delete(t *testing.T) {
-	kv := store.New()
+	kv := store.NewMemoryStore()
 	kv.Set("delete-me", []byte("bye"))
 	fsm := &raft.FSMImpl{Store: kv}
 
@@ -55,14 +53,14 @@ func TestFSM_Apply_Delete(t *testing.T) {
 		t.Fatalf("Apply returned error: %v", err)
 	}
 
-	_, ok := kv.Get("delete-me")
-	if ok {
+	val, _ := kv.Get("delete-me")
+	if val != nil {
 		t.Error("expected key to be deleted")
 	}
 }
 
 func TestFSM_Apply_UnknownOperation(t *testing.T) {
-	kv := store.New()
+	kv := store.NewMemoryStore()
 	fsm := &raft.FSMImpl{Store: kv}
 
 	cmd := store.Command{
@@ -71,19 +69,19 @@ func TestFSM_Apply_UnknownOperation(t *testing.T) {
 		Value: []byte("y"),
 	}
 
-	// Should not panic or apply anything
 	result := fsm.Apply(makeLog(cmd))
 	if err, ok := result.(error); ok && err != nil {
 		t.Errorf("expected no error on unknown op, got: %v", err)
 	}
 
-	if _, ok := kv.Get("x"); ok {
+	val, _ := kv.Get("x")
+	if val != nil {
 		t.Error("expected no key to be created for unknown op")
 	}
 }
 
 func TestFSM_Apply_MalformedData(t *testing.T) {
-	kv := store.New()
+	kv := store.NewMemoryStore()
 	fsm := &raft.FSMImpl{Store: kv}
 
 	// Malformed JSON (not a store.Command)

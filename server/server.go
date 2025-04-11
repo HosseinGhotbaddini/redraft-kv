@@ -13,8 +13,8 @@ import (
 // - redisAddr: bind address for Redis (e.g., 127.0.0.1:9001)
 // - nodeID: used for command tracing/debugging
 // - r: the raft engine to route write commands through
-// - kv: the local key-value store
-func Start(redisAddr string, nodeID string, r *raft.Node, kv *store.Store) error {
+// - kv: the local key-value store (implements store.Store)
+func Start(redisAddr string, nodeID string, r *raft.Node, kv store.Store) error {
 	log.Printf("Starting Redis server on %s...", redisAddr)
 	return redcon.ListenAndServe(redisAddr,
 		func(conn redcon.Conn, cmd redcon.Command) {

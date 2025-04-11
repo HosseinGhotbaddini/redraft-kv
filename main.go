@@ -22,16 +22,25 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize store
-	kvStore := store.New()
+	// Initialize store backend (memory or bolt)
+	var kvStore store.Store
+	switch cfg.StoreBackend {
+	case "bolt":
+		kvStore = store.NewBoltStore(cfg.StorePath)
+	default:
+		kvStore = store.NewMemoryStore()
+	}
+	defer kvStore.Close()
 
-	// Initialize Raft
+	log.Printf("Initialized store backend: %T", kvStore)
+
+	// Initialize Raft node
 	raftNode, err := raft.NewRaftNode(cfg.ID, cfg.RaftAddr, cfg.Peers, kvStore)
 	if err != nil {
 		log.Fatalf("Failed to start Raft node: %v", err)
 	}
 
-	// Start Redis server
+	// Start Redis-compatible server
 	if err := server.Start(cfg.RedisAddr, cfg.ID, raftNode, kvStore); err != nil {
 		log.Fatalf("Redis server error: %v", err)
 	}

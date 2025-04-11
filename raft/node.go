@@ -21,8 +21,8 @@ type Node struct {
 // - id:       local node ID
 // - raftAddr: local Raft TCP bind address (e.g., 127.0.0.1:7001)
 // - peers:    map of other node IDs to their raft addresses
-// - kv:       in-memory store used by the FSM
-func NewRaftNode(id, raftAddr string, peers map[string]string, kv *store.Store) (*Node, error) {
+// - kv:       store backend (memory or bolt)
+func NewRaftNode(id, raftAddr string, peers map[string]string, kv store.Store) (*Node, error) {
 	// Create a data directory per node (for logs, snapshots, etc.)
 	dataDir := filepath.Join("data", id)
 	if err := os.MkdirAll(dataDir, 0700); err != nil {
