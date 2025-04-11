@@ -3,6 +3,3 @@ raft_addr: 127.0.0.1:7002
 redis_addr: 127.0.0.1:9002
 store_backend: bolt
 store_path: data/node2/store.db
-peers:
-  node1: 127.0.0.1:7001
-  node3: 127.0.0.1:7003

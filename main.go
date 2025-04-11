@@ -34,8 +34,8 @@ func main() {
 
 	log.Printf("Initialized store backend: %T", kvStore)
 
-	// Initialize Raft node
-	raftNode, err := raft.NewRaftNode(cfg.ID, cfg.RaftAddr, cfg.Peers, kvStore)
+	// Initialize Raft node (no static peers)
+	raftNode, err := raft.NewRaftNode(cfg.ID, cfg.RaftAddr, kvStore)
 	if err != nil {
 		log.Fatalf("Failed to start Raft node: %v", err)
 	}
