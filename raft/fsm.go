@@ -8,21 +8,17 @@ import (
 	hraft "github.com/hashicorp/raft"
 )
 
-// FSMImpl implements hashicorp/raft.FSM.
-// It defines how replicated log entries are applied to the key-value store.
 type FSMImpl struct {
 	Store store.Store
 }
 
 // Apply is called once a log entry is committed by the Raft cluster.
-// This is the only place where the store is mutated to ensure deterministic state.
 func (f *FSMImpl) Apply(logEntry *hraft.Log) interface{} {
 	var cmd store.Command
 	if err := json.Unmarshal(logEntry.Data, &cmd); err != nil {
 		return err
 	}
 
-	// Dispatch based on the operation type
 	switch cmd.Op {
 	case "set":
 		f.Store.Set(cmd.Key, cmd.Value)
@@ -32,24 +28,23 @@ func (f *FSMImpl) Apply(logEntry *hraft.Log) interface{} {
 	return nil
 }
 
-// Snapshot returns a snapshot implementation. This stub doesn't persist anything.
+// Snapshot generates a point-in-time snapshot of the store.
 func (f *FSMImpl) Snapshot() (hraft.FSMSnapshot, error) {
-	return &noopSnapshot{}, nil
+	// Dump entire store into a map
+	state, err := f.Store.Dump()
+	if err != nil {
+		return nil, err
+	}
+	return &storeSnapshot{data: state}, nil
 }
 
-// Restore is called when a snapshot is loaded (stubbed here).
+// Restore loads a snapshot from a reader into the store.
 func (f *FSMImpl) Restore(rc io.ReadCloser) error {
-	return nil
+	defer rc.Close()
+
+	var snapshot map[string][]byte
+	if err := json.NewDecoder(rc).Decode(&snapshot); err != nil {
+		return err
+	}
+	return f.Store.Load(snapshot)
 }
-
-// noopSnapshot is a stub that cancels the snapshot sink immediately.
-type noopSnapshot struct{}
-
-// Persist attempts to write a snapshot but immediately cancels it.
-func (n *noopSnapshot) Persist(sink hraft.SnapshotSink) error {
-	_ = sink.Cancel()
-	return nil
-}
-
-// Release is a no-op for this implementation.
-func (n *noopSnapshot) Release() {}

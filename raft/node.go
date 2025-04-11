@@ -111,3 +111,8 @@ func (n *Node) ListPeers() []hraft.Server {
 	}
 	return f.Configuration().Servers
 }
+
+func (n *Node) Snapshot() error {
+	future := n.raft.Snapshot()
+	return future.Error()
+}

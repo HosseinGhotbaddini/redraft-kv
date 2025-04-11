@@ -86,6 +86,12 @@ func HandleCommand(nodeID string, r *raft.Node, kv store.Store, cmd redcon.Comma
 		}
 		return strings.Join(lines, "\n")
 
+	case "SNAPSHOT":
+		if err := r.Snapshot(); err != nil {
+			return "ERR snapshot failed: " + err.Error()
+		}
+		return "OK"
+
 	default:
 		return "ERR unknown command"
 	}

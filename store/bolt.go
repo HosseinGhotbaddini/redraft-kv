@@ -75,3 +75,38 @@ func (s *BoltStore) Delete(key string) error {
 func (s *BoltStore) Close() error {
 	return s.db.Close()
 }
+
+func (s *BoltStore) Dump() (map[string][]byte, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	state := make(map[string][]byte)
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(defaultBucket))
+		return b.ForEach(func(k, v []byte) error {
+			state[string(k)] = append([]byte(nil), v...)
+			return nil
+		})
+	})
+	return state, err
+}
+
+func (s *BoltStore) Load(snapshot map[string][]byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(defaultBucket))
+		if err := b.ForEach(func(k, _ []byte) error {
+			return b.Delete(k)
+		}); err != nil {
+			return err
+		}
+		for k, v := range snapshot {
+			if err := b.Put([]byte(k), v); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

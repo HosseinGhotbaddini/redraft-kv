@@ -40,3 +40,25 @@ func (m *MemoryStore) Delete(key string) error {
 func (m *MemoryStore) Close() error {
 	return nil
 }
+
+func (m *MemoryStore) Dump() (map[string][]byte, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	clone := make(map[string][]byte, len(m.data))
+	for k, v := range m.data {
+		clone[k] = append([]byte(nil), v...) // deep copy
+	}
+	return clone, nil
+}
+
+func (m *MemoryStore) Load(snapshot map[string][]byte) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.data = make(map[string][]byte, len(snapshot))
+	for k, v := range snapshot {
+		m.data[k] = append([]byte(nil), v...) // deep copy
+	}
+	return nil
+}
