@@ -1,6 +1,6 @@
 # Redraft
 
-**Redraft** is a distributed key-value store that uses the Redis wire protocol for client interaction and Raft consensus for replication. It is implemented in Go and designed with modular clarity in mind.
+Redraft is a distributed key-value store that uses the Redis wire protocol for client interaction and Raft consensus for state replication. It is implemented in Go and designed with a modular, extensible architecture.
 
 ---
 
@@ -8,14 +8,12 @@
 
 - Redis-compatible interface via [`redcon`](https://github.com/tidwall/redcon)
 - Raft-based state replication using [`hashicorp/raft`](https://github.com/hashicorp/raft)
-- Modular architecture
-- Static 3-node cluster bootstrapped
-- Deterministic FSM with basic operations
-- In-memory key-value store
+- Dynamic cluster membership via `BOOTSTRAP` and `JOIN` commands
+- Modular architecture: server / raft / store
+- In-memory or BoltDB-based key-value store
 - Configurable via YAML
-- Unit test scaffolding and automated test target
-- Developer Makefile for build/run/test
-
+- Deterministic FSM with basic operations (`SET`, `GET`, `DELETE`)
+- Unit test coverage and dev-friendly Makefile
 
 ---
 
@@ -25,9 +23,9 @@ Redraft is composed of three core modules:
 
 - **server/** — Redis protocol server and command routing
 - **raft/** — Raft node lifecycle and FSM integration
-- **store/** — Thread-safe in-memory key-value state
+- **store/** — Pluggable key-value store (in-memory or BoltDB)
 
-For a full system overview, see [docs/DESIGN.md](docs/DESIGN.md).
+See [docs/DESIGN.md](docs/DESIGN.md) for detailed architecture notes.
 
 ---
 
@@ -43,25 +41,22 @@ go mod tidy
 
 ### 2. Prepare Config Files
 
-Create one config file per node under `config/`:
+Each node config YAML should define only its own local addresses and store backend.
 
 ```yaml
 # config/node1.yaml
 id: node1
 raft_addr: 127.0.0.1:7001
 redis_addr: 127.0.0.1:9001
-peers:
-  node2: 127.0.0.1:7002
-  node3: 127.0.0.1:7003
+store_backend: bolt
+store_path: data/node1/store.db
 ```
 
-Duplicate this for node2.yaml, node3.yaml with appropriate IDs and ports.
+Repeat for `node2.yaml`, `node3.yaml`, etc.
 
 ---
 
 ### 3. Run Nodes
-
-Using the Makefile:
 
 ```bash
 make node1
@@ -69,60 +64,56 @@ make node2
 make node3
 ```
 
-Or to start all three in a tmux session:
+Or start all three in a tmux session:
 
 ```bash
 make cluster
 ```
 
-You can also run manually with:
+---
+
+### 4. Form the Cluster
+
+Connect to the leader node (e.g., `redis-cli -p 9001`), then:
 
 ```bash
-make run CONFIG=config/custom.yaml
+BOOTSTRAP node1 127.0.0.1:7001
+JOIN node2 127.0.0.1:7002
+JOIN node3 127.0.0.1:7003
 ```
 
 ---
 
-### 4. Interact via redis-cli
-
-```bash
-redis-cli -p 9001
-```
-
-Or use ports 9002, 9003 to interact with other nodes.
-
-Then test it:
+### 5. Test Key Commands
 
 ```bash
 SET foo bar
 GET foo
-DEL foo
+DELETE foo
 ```
 
-Only the leader node will accept write commands. Use GET on any node.
+Only the leader accepts writes. Reads (`GET`) work on all nodes.
 
 ---
 
-## Run Tests
+## Development
+
+### Run All Tests
 
 ```bash
 make test
 ```
 
-This runs all unit tests in test/.
-
----
-
-## Clean Build Artifacts
+### Clean Build Artifacts
 
 ```bash
 make clean
 ```
 
-Removes the binary and local data/ directories used by Raft.
+Removes the binary and data directories.
 
 ---
 
-## Notes
+## Roadmap
 
-For future improvements, see [docs/ROADMAP.md](docs/ROADMAP.md).
+See [docs/ROADMAP.md](docs/ROADMAP.md) for planned features and design goals.
