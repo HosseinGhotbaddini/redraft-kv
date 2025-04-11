@@ -82,3 +82,32 @@ func (n *Node) JoinNode(id, addr string) error {
 	future := n.raft.AddVoter(hraft.ServerID(id), hraft.ServerAddress(addr), 0, 0)
 	return future.Error()
 }
+
+// GetLeader returns the current leader's ID and address.
+func (n *Node) GetLeader() (string, string) {
+	leaderAddr := n.raft.Leader()
+	if leaderAddr == "" {
+		return "", ""
+	}
+
+	f := n.raft.GetConfiguration()
+	if err := f.Error(); err != nil {
+		return "", ""
+	}
+
+	for _, srv := range f.Configuration().Servers {
+		if srv.Address == leaderAddr {
+			return string(srv.ID), string(srv.Address)
+		}
+	}
+	return "", ""
+}
+
+// ListPeers returns the current configuration of the Raft cluster.
+func (n *Node) ListPeers() []hraft.Server {
+	f := n.raft.GetConfiguration()
+	if err := f.Error(); err != nil {
+		return nil
+	}
+	return f.Configuration().Servers
+}

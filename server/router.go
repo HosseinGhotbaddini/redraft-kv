@@ -72,6 +72,20 @@ func HandleCommand(nodeID string, r *raft.Node, kv store.Store, cmd redcon.Comma
 		}
 		return "OK"
 
+	case "LEADER":
+		id, addr := r.GetLeader()
+		if id == "" || addr == "" {
+			return "(nil)"
+		}
+		return id + " " + addr
+
+	case "NODES":
+		var lines []string
+		for _, peer := range r.ListPeers() {
+			lines = append(lines, string(peer.ID)+" "+string(peer.Address))
+		}
+		return strings.Join(lines, "\n")
+
 	default:
 		return "ERR unknown command"
 	}
