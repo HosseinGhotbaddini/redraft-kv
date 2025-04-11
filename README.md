@@ -9,6 +9,7 @@ Redraft is a distributed key-value store that uses the Redis wire protocol for c
 - Redis-compatible interface via [`redcon`](https://github.com/tidwall/redcon)
 - Raft-based state replication using [`hashicorp/raft`](https://github.com/hashicorp/raft)
 - Dynamic cluster membership via `BOOTSTRAP` and `JOIN` commands
+- Introspection commands: `LEADER`, `NODES`
 - Modular architecture: server / raft / store
 - In-memory or BoltDB-based key-value store
 - Configurable via YAML
@@ -93,6 +94,15 @@ DELETE foo
 ```
 
 Only the leader accepts writes. Reads (`GET`) work on all nodes.
+
+---
+
+### 6. Cluster Introspection
+
+```bash
+LEADER   # returns "node1 127.0.0.1:7001"
+NODES    # returns all nodes, one per line
+```
 
 ---
 
